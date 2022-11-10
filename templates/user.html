@@ -11,8 +11,35 @@
     {% endif %}
 {% endwith %}
 
- <form action = "#" method = "POST">
-    <input type = "email" name="email" placeholder="Enter Email" value="{{email if email}}"/>
-    <input type = "submit" value = "submit">
- </form>
+<a class="btn btn-primary" href="/createTask" role="button">Create task</a>
+
+ <table>
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Starting date</th>
+        <th>End date</th>
+        <th>Completed</th>
+        <th>Functions</th>
+    </tr>
+    {% for index in range(size) %}
+    <tr>
+        <td>{{index+1}}</td>
+        <td>{{values[index].name}}</td>
+        <td>{{values[index].startDate}}</td>
+        <td>{{values[index].endDate}}</td>
+        <td>{{values[index].done}}</td>
+        <td>
+            <button id={{index}} class="edit">Edit</button>
+            <form id="btn" action="{{ url_for('complete') }}" method="post">
+                <button type = "submit" name = "Complete" value = "{{index}}">Complete</button>
+            </form>
+            <form id="btn" action="{{ url_for('delete') }}" method="post">
+                <button type = "submit" name = "Delete" value = "{{index}}">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+
+ </table>
  {% endblock %}
