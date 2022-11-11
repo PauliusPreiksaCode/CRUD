@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, render_template, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import uuid
 
 app = Flask(__name__)
 app.secret_key = "EEA24B71D34B87C5E53C98E57A344"
@@ -13,10 +14,13 @@ class users(db.Model):
     _id = db.Column("id", db.Integer, primary_key = True)
     name = db.Column(db.String(255))
     password = db.Column(db.String(255))
+    uniqueId = db.Column(db.String(255))
+    
     
     def __init__(self, name, password):
         self.name = name
         self.password = password
+        self.uniqueId = str(uuid.uuid4())
         
 class tasks(db.Model):
     _id = db.Column("id", db.Integer, primary_key = True)
@@ -24,7 +28,7 @@ class tasks(db.Model):
     startDate = db.Column(db.String(255))
     endDate = db.Column(db.String(255))
     done = db.Column(db.Integer())
-    userId = db.Column(db.Integer)
+    userId = db.Column(db.String(255))
     
     def __init__(self, name, startDate, endDate, done, id):
         self.name = name
@@ -101,103 +105,116 @@ def logout():
     flash("You have been logged out", "info")
     session.pop("user", None)
     session.pop("pass", None)
+    session.pop("taskId", None)
     return redirect(url_for("login"))
-
 
 
 @app.route("/user/")
 def user():
-    
-    #email = None
     if "user" in session:
         found_user = users.query.filter_by(name = session["user"]).first()
-        toDoTasks = tasks.query.filter_by(userId = found_user._id).all()
-        
+        toDoTasks = tasks.query.filter_by(userId = found_user.uniqueId).all()
         return render_template("user.html", values = toDoTasks, size = len(toDoTasks))
-        
-        
     else:
         flash("You are not logged in")
         return redirect(url_for("login"))
     
 @app.route("/createTask/", methods=["POST", "GET"])
 def createTask():
-    if request.method == "POST":
-        name = request.form["nm"]
-        if len(name) == 0:
-            flash("Task cannot be empty")
+    if "user" in session:
+        if request.method == "POST":
+            name = request.form["nm"]
+            if len(name) == 0:
+                flash("Task cannot be empty")
+                return render_template("createTask.html")
+            now = datetime.now()
+            date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+            
+            user = users.query.filter_by(name = session["user"]).first()
+            task = tasks(name, date_time, "-", 0, user.uniqueId)
+            db.session.add(task)
+            db.session.commit()
+            flash("Task added successfully", "info")
+            return redirect(url_for("user"))
+        else:
             return render_template("createTask.html")
-        now = datetime.now()
-        date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-        
-        user = users.query.filter_by(name = session["user"]).first()
-        task = tasks(name, date_time, "-", 0, user._id)
-        db.session.add(task)
-        db.session.commit()
-        flash("Task added successfully", "info")
-        return redirect(url_for("user"))
     else:
-        return render_template("createTask.html")
+        flash("You are not logged in")
+        return redirect(url_for("login"))
     
 @app.route("/complete", methods=["POST"])
 def complete():
-    if request.method == "POST":
-        id = request.form.get('Complete')
-        
-        found_user = users.query.filter_by(name = session["user"]).first()
-        toDoTasks = tasks.query.filter_by(userId = found_user._id).all()
-        now = datetime.now()
-        date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-        
-        toDoTasks[int(id)].done = 1
-        toDoTasks[int(id)].endDate = date_time
-        
-        db.session.commit()
-        return redirect(url_for("user"))
+    if "user" in session:
+        if request.method == "POST":
+            id = request.form.get('Complete')
+            
+            found_user = users.query.filter_by(name = session["user"]).first()
+            toDoTasks = tasks.query.filter_by(userId = found_user.uniqueId).all()
+            now = datetime.now()
+            date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+            
+            toDoTasks[int(id)].done = 1
+            toDoTasks[int(id)].endDate = date_time
+            
+            db.session.commit()
+            return redirect(url_for("user"))
+        else:
+            return redirect(url_for("user"))
     else:
-        return redirect(url_for("user"))
+        flash("You are not logged in")
+        return redirect(url_for("login"))
     
 @app.route("/delete", methods=["POST"])
 def delete():
-    if request.method == "POST":
+    if "user" in session:
         id = request.form.get('Delete')
-        
         found_user = users.query.filter_by(name = session["user"]).first()
-        toDoTasks = tasks.query.filter_by(userId = found_user._id).all()
-        
-        task = tasks.query.filter_by(_id = toDoTasks[int(id)]._id) 
+        toDoTasks = tasks.query.filter_by(userId = found_user.uniqueId).all()
+        task = tasks.query.filter_by(_id = toDoTasks[int(id)]._id)
         task.delete()
-
-        
         db.session.commit()
         return redirect(url_for("user"))
     else:
-        return redirect(url_for("user"))
+        flash("You are not logged in")
+        return redirect(url_for("login"))
     
-@app.route("/edit", methods=["POST"])
+    
+@app.route("/linkToEdit", methods=["POST", "GET"])
+def linkToEdit():
+    if "user" in session:
+        id = request.form.get('Edit')
+        print(id)
+        session["taskId"] = id
+        return redirect(url_for("edit"))
+    else:
+        flash("You are not logged in")
+        return redirect(url_for("login"))
+    
+@app.route("/edit", methods=["POST", "GET"])
 def edit():
-    if request.method == "POST":
+    if "user" in session:
+        id = session["taskId"]
+        found_user = users.query.filter_by(name = session["user"]).first()
+        toDoTasks = tasks.query.filter_by(userId = found_user.uniqueId).all()
+        task = tasks.query.filter_by(_id = toDoTasks[int(id)]._id).first()
         
-        return render_template("user.html", email = email)
-    
-    # if request.method == "POST":
-        #     email = request.form["email"]
-        #     session["email"] = email
-        #     found_user = users.query.filter_by(name = user).first()
-        #     found_user.password = email # pakeitimas data
-        #     db.session.commit()
-        #     flash("Email was saved", "info")
-        # else:
-        #     if "email" in session:
-        #         email = session["email"]
-        #return render_template("user.html", email = email)
- 
- 
- 
+        if request.method == "POST":
+            task.name = request.form["name"]
+            task.startDate = request.form["startDate"]
+            task.endDate = request.form["endDate"]
+            task.done = request.form["finished"]
+            db.session.commit()
+            flash("Information was changed", "info")
+            
+        return render_template("edit.html", name = task.name, startDate = task.startDate, endDate = task.endDate, finished = task.done)
+    else:
+        flash("You are not logged in")
+        return redirect(url_for("login"))
+
 @app.route("/allUsers")
 def allUsers():
        return render_template("allUsers.html", values = users.query.all())
-   
+
 
 if __name__ == "__main__":
     with app.app_context():

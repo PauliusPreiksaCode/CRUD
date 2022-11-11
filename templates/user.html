@@ -30,12 +30,14 @@
         <td>{{values[index].endDate}}</td>
         <td>{{values[index].done}}</td>
         <td>
-            <button id={{index}} class="edit">Edit</button>
             <form id="btn" action="{{ url_for('complete') }}" method="post">
-                <button type = "submit" name = "Complete" value = "{{index}}">Complete</button>
+                <button class="btn btn-primary" type = "submit" name = "Complete" value = "{{index}}">Complete</button>
             </form>
             <form id="btn" action="{{ url_for('delete') }}" method="post">
-                <button type = "submit" name = "Delete" value = "{{index}}">Delete</button>
+                <button class="btn btn-primary" type = "submit" name = "Delete" value = "{{index}}">Delete</button>
+            </form>
+            <form id="btn" action="{{ url_for('linkToEdit') }}" method="post">
+                <button class="btn btn-primary" type = "submit" name = "Edit" value = "{{index}}">Edit</button>
             </form>
         </td>
     </tr>

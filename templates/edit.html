@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %} Create task {% endblock %}
+
+{% block content %}
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <p>{{msg}}</p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<form action = "{{user}}" method="post">
+    <p>Name:<input type = "text" name = "name" value = "{{name if name}}"></p>
+    <p>Starting date:<input type = "text" name = "startDate" value = "{{startDate if startDate}}"></p>
+    <p>Finish date:<input type = "text" name = "endDate" value = "{{endDate if endDate}}"></p>
+    <p>Finished:<input type = "text" name = "finished" value = "{{finished if finished}}"></p>
+    <p>
+        <input type = "submit" value = "Save changes">
+        <a class="btn btn-primary" href="/user" role="button">Back</a>
+    </p>
+
+</form>
+ 
+ {% endblock %}
