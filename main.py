@@ -218,7 +218,6 @@ def edit():
         #if tempered with value
         task = toDoTasks[len(toDoTasks)-1]
         lastId = task._id
-        #taskDone = str(task.done)
 
         if task.done == 1:
             taskDone = str("True")
@@ -251,7 +250,6 @@ def edit():
                 task.done = 0
                 taskDone = str("False")
 
-            #taskDone = str(task.done)
             db.session.commit()
             flash("Information was changed", "info")
             
