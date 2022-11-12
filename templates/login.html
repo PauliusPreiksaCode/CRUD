@@ -27,15 +27,17 @@
     {% endif %}
 {% endwith %}
 
-<form action = "#" method="post">
-    <div class="form-group">
-        <label>Username</label>
-        <input class="form-control" type = "text" name = "nm">
-        <label>Password</label>
-        <input class="form-control" type = "password" name = "pass">
-        <input class="btn btn-primary" type = "submit" value = "Login">
-    </div>
-</form>
+<div class="login-register">
+  <form action = "#" method="post">
+      <div class="form-group">
+          <label>Username</label>
+          <input class="form-control" type = "text" name = "nm">
+          <label>Password</label>
+          <input class="form-control" type = "password" name = "pass">
+          <input class="btn btn-primary" type = "submit" value = "Login">
+      </div>
+  </form>
+</div>
 <p>Don't have an account? Create one!</p> <a class="btn btn-primary" href="/register" role="button">Register</a>
  
  {% endblock %}

@@ -47,13 +47,13 @@
         <td>{{values[index].done}}</td>
         <td>
             <form id="btn" action="{{ url_for('complete') }}" method="post">
-                <button class="btn btn-primary" type = "submit" name = "Complete" value = "{{index}}">Complete</button>
+                <button class="form-button btn btn-primary" type = "submit" name = "Complete" value = "{{index}}">Complete</button>
             </form>
             <form id="btn" action="{{ url_for('delete') }}" method="post">
-                <button class="btn btn-primary" type = "submit" name = "Delete" value = "{{index}}">Delete</button>
+                <button class="form-button btn btn-primary" type = "submit" name = "Delete" value = "{{index}}">Delete</button>
             </form>
             <form id="btn" action="{{ url_for('linkToEdit') }}" method="post">
-                <button class="btn btn-primary" type = "submit" name = "Edit" value = "{{index}}">Edit</button>
+                <button class="form-button btn btn-primary" type = "submit" name = "Edit" value = "{{index}}">Edit</button>
             </form>
         </td>
     </tr>

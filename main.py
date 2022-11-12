@@ -9,6 +9,8 @@ app = Flask(__name__)
 app.secret_key = "EEA24B71D34B87C5E53C98E57A344"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sqlite3'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False 
+#date regex 
+pattern = re.compile("[0-9]{4}-[0-1]{1}[0-9]{1}-[0-3][0-9] [0-2][0-9]:[0-6][0-9]:[0-6][0-9]")
 
 db = SQLAlchemy(app)
 
@@ -43,7 +45,7 @@ class tasks(db.Model):
 
 @app.route("/")
 def home():
-    return render_template("login.html")
+    return redirect(url_for("login"))
 
 
 @app.route("/login/", methods=["POST", "GET"])
@@ -71,7 +73,7 @@ def login():
         if "user" in session:
             flash("Already logged in")
             return redirect(url_for("user"))
-        return render_template("login.html")
+    return render_template("login.html")
     
     
 @app.route("/register/", methods=["POST", "GET"])
@@ -123,15 +125,30 @@ def user():
 def createTask():
     if "user" in session:
         if request.method == "POST":
-            name = request.form["nm"]
+            name = request.form["name"]
+            startDate = request.form["startDate"]
+            endDate = request.form["endDate"]
+
             if len(name) == 0:
-                flash("Task cannot be empty")
+                flash("Task's name cannot be empty")
                 return render_template("createTask.html")
-            now = datetime.now()
-            date_time = now.strftime("%Y.%m.%d, %H:%M:%S")
+
+            if not(pattern.match(startDate)):
+                now = datetime.now()
+                startDate = now.strftime("%Y-%m-%d %H:%M:%S")
+                flash("Wrong start date and time pattern when creating task, please edit to correct", "info")
+
+            if not(pattern.match(endDate)):
+                endDate = "-"
+                flash("Wrong end date and time pattern when creating task, please edit to correct", "info")
+
+            if(request.form["finished"] == "True"):
+                finished = 1
+            else:
+                finished = 0
             
             user = users.query.filter_by(name = session["user"]).first()
-            task = tasks(name, date_time, "-", 0, user.uniqueId)
+            task = tasks(name, startDate, endDate, finished, user.uniqueId)
             db.session.add(task)
             db.session.commit()
             flash("Task added successfully", "info")
@@ -151,7 +168,7 @@ def complete():
             found_user = users.query.filter_by(name = session["user"]).first()
             toDoTasks = tasks.query.filter_by(userId = found_user.uniqueId).all()
             now = datetime.now()
-            date_time = now.strftime("%Y.%m.%d, %H:%M:%S")
+            date_time = now.strftime("%Y-%m-%d %H:%M:%S")
             
             toDoTasks[int(id)].done = 1
             toDoTasks[int(id)].endDate = date_time
@@ -173,6 +190,7 @@ def delete():
         task = tasks.query.filter_by(_id = toDoTasks[int(id)]._id)
         task.delete()
         db.session.commit()
+        flash("Task deleted", "info")
         return redirect(url_for("user"))
     else:
         flash("You are not logged in")
@@ -196,27 +214,48 @@ def edit():
         id = session["taskId"]
         found_user = users.query.filter_by(name = session["user"]).first()
         toDoTasks = tasks.query.filter_by(userId = found_user.uniqueId).all()
+
+        #if tempered with value
+        task = toDoTasks[len(toDoTasks)-1]
+        lastId = task._id
+        #taskDone = str(task.done)
+
+        if task.done == 1:
+            taskDone = str("True")
+        else:
+            taskDone = str("False")
+
+        
+        if(int(id) > lastId):
+            return render_template("edit.html", name = task.name, startDate = task.startDate, endDate = task.endDate, finished = taskDone)
         task = tasks.query.filter_by(_id = toDoTasks[int(id)]._id).first()
         
         if request.method == "POST":
-            pattern = re.compile("[0-9]{4}\.[0-1]{1}[0-9]{1}\.[0-3][0-9], [0-2][0-9]:[0-6][0-9]:[0-6][0-9]")
-            if not(pattern.match(request.form["startDate"]) and pattern.match(request.form["endDate"])):
-                flash("Date format needs to be: YYYY.MM.DD, HH:mm:ss", "info")
-                return render_template("edit.html", name = task.name, startDate = task.startDate, endDate = task.endDate, finished = task.done)
 
             task.name = request.form["name"]
-            task.startDate = request.form["startDate"]
-            task.endDate = request.form["endDate"]
-            finished = request.form["finished"]
-            if finished == "True":
-                task.done = 1
-            else:
-                task.done = 0
 
+            if not(pattern.match(request.form["startDate"])):
+                flash("Date format needs to be: YYYY-MM-DD hh:mm:ss", "info")
+            else:
+                task.startDate = request.form["startDate"]
+
+            if not(pattern.match(request.form["endDate"])):
+                flash("Date format needs to be: YYYY-MM-DD hh:mm:ss", "info")
+            else:
+                task.startDate = request.form["endDate"]
+
+            if request.form["finished"].lower() == "true" or request.form["finished"] == "1":
+                task.done = 1
+                taskDone = str("True")
+            elif request.form["finished"].lower() == "false" or request.form["finished"] == "0":
+                task.done = 0
+                taskDone = str("False")
+
+            #taskDone = str(task.done)
             db.session.commit()
             flash("Information was changed", "info")
             
-        return render_template("edit.html", name = task.name, startDate = task.startDate, endDate = task.endDate, finished = task.done)
+        return render_template("edit.html", name = task.name, startDate = task.startDate, endDate = task.endDate, finished = taskDone)
     else:
         flash("You are not logged in")
         return redirect(url_for("login"))

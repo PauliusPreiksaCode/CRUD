@@ -26,21 +26,22 @@
     {% endif %}
 {% endwith %}
 
-<form action = "{{user}}" method="post">
-    <div class="form-group">
-        <label>Name</label>
-        <input class="form-control" type = "text" name = "name" value = "{{name if name}}">
-        <label>Starting date</label>
-        <input class="form-control" type = "text" name = "startDate" value = "{{startDate if startDate}}">
-        <label>Finish date</label>
-        <input class="form-control" type = "text" name = "endDate" value = "{{endDate if endDate}}">
-        <label>Finished</label>
-        <input class="form-control" type = "text" name = "finished" value = "{{finished if finished}}">
-        
-        <input class="btn btn-primary" type = "submit" value = "Save changes">
-        <a class="btn btn-primary" href="/user" role="button">Back</a>
-    </div>
-
-</form>
+<div class="display-form">
+  <form action = "{{user}}" method="post">
+      <div class="form-group">
+          <label>Name</label>
+          <input class="form-control" type = "text" name = "name" value = "{{name if name}}">
+          <label>Starting date</label>
+          <input class="form-control" type = "text" name = "startDate" value = "{{startDate if startDate}}">
+          <label>Finish date</label>
+          <input class="form-control" type = "text" name = "endDate" value = "{{endDate if endDate}}">
+          <label>Finished</label>
+          <input class="form-control" type = "text" name = "finished" value = "{{finished if finished}}">
+          
+          <input class="btn btn-primary" type = "submit" value = "Save changes">
+          <a class="btn btn-primary" href="/user" role="button">Back</a>
+      </div>
+  </form>
+</div>
  
  {% endblock %}
