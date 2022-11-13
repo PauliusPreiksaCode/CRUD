@@ -225,7 +225,7 @@ def edit():
             taskDone = str("False")
 
         
-        if(int(id) > lastId):
+        if(int(id) > lastId or int(id) < 0):
             return render_template("edit.html", name = task.name, startDate = task.startDate, endDate = task.endDate, finished = taskDone)
         task = tasks.query.filter_by(_id = toDoTasks[int(id)]._id).first()
         
