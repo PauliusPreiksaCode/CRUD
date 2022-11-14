@@ -53,12 +53,12 @@ def login():
     if request.method == "POST":
         user = request.form["nm"]
         password = request.form["pass"].encode("utf-8")
-        session["user"] = user
-        
         found_user = users.query.filter_by(name = user).first()
+        
         if found_user:
             if bcrypt.checkpw(password, found_user.password_hash):
                 flash("Logged in succesfully")
+                session["user"] = user
                 return redirect(url_for("user"))
             
             else:
@@ -83,6 +83,10 @@ def register():
         password = request.form["pass"].encode("utf-8")
         if len(password) == 0 or len(user) == 0:
             flash("Username or password cannot be empty")
+            return render_template("register.html")
+        
+        if not(re.match("^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$", request.form["pass"])):
+            flash("Password must contain 8 letter, at least one number and one letter")
             return render_template("register.html")
         
         found_user = users.query.filter_by(name = user).first()
